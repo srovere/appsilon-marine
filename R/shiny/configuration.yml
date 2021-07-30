@@ -1,0 +1,13 @@
+# Data source definition
+data_source:
+  type: 'CSV'
+  parameters:
+    tables:
+      ship_types: '../../data/ship_types.csv'
+      ships: '../../data/ships.csv'
+      locations: '../../data/locations.csv'
+      
+# Map configuration
+basemap:
+  url: "//server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+  attribution: "Appsilon"

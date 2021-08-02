@@ -1,0 +1,15 @@
+body, h1, h2, h3, h4, h5,h6, p, div, div.header {
+  font-family: 'Roboto Condensed', 'sans-serif' !important;
+}
+
+.card div.content {
+  background-color: #78866b !important;
+}
+
+.ui-dropdown {
+  padding-bottom: 10px;
+}
+
+body {
+  background-color: #214a4f;
+}

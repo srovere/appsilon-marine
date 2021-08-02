@@ -9,5 +9,9 @@ data_source:
       
 # Map configuration
 basemap:
-  url: "//server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+  url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
   attribution: "Appsilon"
+  center:
+    latitude: 52.23276982545444
+    longitude: 21.01414467671963
+  zoom: 20

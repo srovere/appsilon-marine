@@ -9,13 +9,24 @@ require(shiny.semantic)
 # Define UI for application
 shinyUI(
     shiny.semantic::semanticPage(
-        title = "Appsilon Test",
+        theme = "superhero", title = "Appsilon Test",
         
-        # User inputs
-        dropDownUI("ship_type_id"),
-        dropDownUI("ship_id"),
+        # Load CSS
+        tags$link(rel = "stylesheet", type = "text/css", href = "css/styles.css"),
         
-        # Map
+        # Show header
+        header(title = "Appsilon Test", description = ""),
+        
+        # User input        
+        cards(
+            class = "two",
+            card(dropDownUI("ship_type_id", "Vessel type")),
+            card(dropDownUI("ship_id", "Vessel"))
+        ),
+        
+        br(),
+            
+        # Main content,
         leaflet::leafletOutput(outputId = "coursesMap")
     )
 )

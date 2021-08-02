@@ -1,8 +1,11 @@
 # Define the UI for dropdowns
-dropDownUI <- function(id) {
+dropDownUI <- function(id, label) {
   ns <- NS(id)
   tagList(
-    shiny::uiOutput(ns("out"))
+    div(class = "content",
+        div(class = "header ui-dropdown", label),
+        shiny::uiOutput(ns("out"))
+    )
   )
 }
 

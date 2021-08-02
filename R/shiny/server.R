@@ -2,6 +2,7 @@
 # Server logic for Shiny App
 #
 
+require(htmltools)
 require(shiny)
 require(shiny.semantic)
 
@@ -39,20 +40,26 @@ shinyServer(function(input, output) {
     
     # Map for rendering courses
     output$coursesMap <- leaflet::renderLeaflet({
-        leaflet::leaflet() %>%
+        leaflet::leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
             leaflet::addTiles(map = ., urlTemplate = config$basemap$url, 
-                              attribution = config$basemap$attribution)
+                              attribution = config$basemap$attribution) %>%
+            leaflet::setView(map = ., zoom = config$basemap$zoom,
+                             lng = config$basemap$center$longitude,
+                             lat = config$basemap$center$latitude)
     })
     observe({
         locations <- findLocations()
-        warning(paste0("Locations: ", nrow(locations)))
         if (! is.null(locations) && (nrow(locations) > 1)) {
             # Find longest distance between 2 observations
             longest_distance <- locations %>%
                 dplyr::arrange(dplyr::desc(distance), dplyr::desc(datetime)) %>%
-                dplyr::top_n(1)
+                dplyr::slice_max(1)
             
-            # Create line that represents the trip between observations
+            # Get previous location
+            previous_location <- locations %>%
+                dplyr::filter(ship_id == input$ship_id & observation == longest_distance$observation - 1)
+            
+            # Create a line that represents the trip between observations
             trip <- sf::st_linestring(
                 matrix(c(longest_distance$previous_longitude, longest_distance$previous_latitude,
                          longest_distance$longitude, longest_distance$latitude), nrow = 2, ncol = 2, byrow = TRUE)
@@ -60,14 +67,52 @@ shinyServer(function(input, output) {
             trip.extent   <- sf::st_bbox(trip)
             trip.centroid <- sf::st_centroid(trip)
             
+            # Create point markers for source and destination
+            timestamps <- as.POSIXct(c(previous_location$datetime, longest_distance$datetime), origin="1970-01-01", tz="UTC")
+            markers <- tibble::tibble(
+                is_destination = c(FALSE, TRUE),
+                longitud = c(longest_distance$previous_longitude, longest_distance$longitude),
+                latitud = c(longest_distance$previous_latitude, longest_distance$latitude),
+                datetime = timestamps
+            ) %>%
+                dplyr::mutate(label = sprintf("<b>%s</b><br>%s UTC", dplyr::if_else(is_destination, "Arrival", "Departure"),
+                                              format(datetime, "%Y-%m-%d %H:%m:%S"))) %>%
+                sf::st_as_sf(x = ., coords = c("longitud", "latitud"))
+            
+            # Calculate time traveled
+            time_traveled <- difftime(timestamps[2], timestamps[1], units = "secs")
+            
             # Render map
             leaflet::leafletProxy("coursesMap") %>%
+                # Clear all polygons/pop-ups
+                leaflet::clearPopups(map = .) %>%
+                leaflet::clearShapes(map = .) %>%
+                leaflet::clearMarkers(map = .) %>%
+                # Add line
                 leaflet::addPolygons(map = ., data = trip) %>%
+                # Add label
+                leaflet::addPopups(lng = st_coordinates(trip.centroid)[,1],
+                                   lat = st_coordinates(trip.centroid)[,2], 
+                                   data = longest_distance,
+                                   options = popupOptions(closeButton = FALSE),
+                                   popup = ~sprintf("Heading towards <b>%s</b><br/>Course: %dº | Speed: %d kts<br/>Distance traveled: %.2f m<br>Time traveled: %s", 
+                                                    destination, course, speed, distance, lubridate::seconds_to_period(time_traveled))) %>%
+                # Add source/destination markers
+                leaflet::addCircleMarkers(map = ., data = markers,
+                                          label = ~purrr::map(.x = label, .f = htmltools::HTML),
+                                          labelOptions = labelOptions(noHide = T)) %>%
+                # Fit bounds
                 leaflet::fitBounds(map = ., lng1 = as.double(trip.extent["xmin"]), 
                                    lng2 = as.double(trip.extent["xmax"]),
                                    lat1 = as.double(trip.extent["ymin"]), 
                                    lat2 = as.double(trip.extent["ymax"]))
                 
+        } else {
+            # Clear map
+            leaflet::leafletProxy("coursesMap") %>%
+                leaflet::clearPopups(map = .) %>%
+                leaflet::clearShapes(map = .) %>%
+                leaflet::clearMarkers(map = .)
         }
     })
 })

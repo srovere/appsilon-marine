@@ -27,6 +27,6 @@ shinyUI(
         br(),
             
         # Main content,
-        leaflet::leafletOutput(outputId = "coursesMap")
+        leaflet::leafletOutput(outputId = "coursesMap", height = "75%")
     )
 )

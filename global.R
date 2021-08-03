@@ -10,6 +10,15 @@ require(yaml)
 # Read configuration file
 config <- yaml::yaml.load_file("configuration.yml")
 
+# Load R files
+source("R/DataSource.R", echo = FALSE)
+source("R/CSVDataSource.R", echo = FALSE)
+source("R/Facade.R", echo = FALSE)
+source("R/ShipTypeFacade.R", echo = FALSE)
+source("R/ShipFacade.R", echo = FALSE)
+source("R/LocationFacade.R", echo = FALSE)
+source("R/inputs-module.R", echo = FALSE)
+
 # Create instance for data source
 dataSource <- DataSource$new()$getInstance(driver = config$data_source$driver, 
                                            parameters = config$data_source$parameters)

@@ -4,6 +4,7 @@
 
 require(leaflet)
 require(shiny)
+require(shinybusy)
 require(shiny.semantic)
 
 # Define UI for application
@@ -13,6 +14,9 @@ shinyUI(
         
         # Load CSS
         tags$link(rel = "stylesheet", type = "text/css", href = "css/styles.css"),
+        
+        # Use busy spinner
+        add_busy_spinner(spin = "fading-circle", color = "#ecb753"),
         
         # Show header
         header(title = "Appsilon Test", description = ""),

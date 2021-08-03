@@ -4,6 +4,7 @@
 
 require(htmltools)
 require(shiny)
+require(shinybusy)
 require(shiny.semantic)
 require(sf)
 
@@ -50,7 +51,7 @@ shinyServer(function(input, output, session) {
     })
     observe({
         # Find longest stretch
-        longest_stretch <- findLongestStretch()
+        longest_stretch <- findLongestStretch()    
         if (! is.null(longest_stretch) && (nrow(longest_stretch) == 1)) {
             # Get previous location
             previous_location <- locationFacade$findPreviousLocation(longest_stretch)
@@ -102,7 +103,6 @@ shinyServer(function(input, output, session) {
                                    lng2 = as.double(trip.extent["xmax"]),
                                    lat1 = as.double(trip.extent["ymin"]), 
                                    lat2 = as.double(trip.extent["ymax"]))
-                
         } else {
             # Clear map
             leaflet::leafletProxy("coursesMap") %>%

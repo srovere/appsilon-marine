@@ -32,7 +32,7 @@ testthat::setup({
       )
     )
   )
-
+  
   # Instantiate facade
   shipTypeFacade <<- ShipTypeFacade$new(dataSource)
   shipFacade     <<- ShipFacade$new(dataSource)

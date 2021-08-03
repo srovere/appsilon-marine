@@ -63,18 +63,19 @@ test_that("Find ships by type", {
   )
 })
 
-test_that("Find locations by ship", {
-  # Find ship types
-  ships <- shipFacade$find()
-
-  # Find locations for each ship
-  purrr::walk(
-    .x = dplyr::pull(ships, ship_id),
-    .f = function(ship_id) {
-      locations <- locationFacade$find(ship_id = ship_id)
-
-      # Check that returned locations have the expected ship
-      testthat::expect_true(all(locations$ship_id == ship_id))
-    }
-  )
-})
+# WARNING: this test takes a LOT of time. Enable at you own risk :)
+# test_that("Find locations by ship", {
+#   # Find ship types
+#   ships <- shipFacade$find()
+# 
+#   # Find locations for each ship
+#   purrr::walk(
+#     .x = dplyr::pull(ships, ship_id),
+#     .f = function(ship_id) {
+#       locations <- locationFacade$find(ship_id = ship_id)
+# 
+#       # Check that returned locations have the expected ship
+#       testthat::expect_true(all(locations$ship_id == ship_id))
+#     }
+#   )
+# })

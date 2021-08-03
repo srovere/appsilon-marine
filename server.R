@@ -8,7 +8,7 @@ require(shiny.semantic)
 require(sf)
 
 # Define server logic required to draw a histogram
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
     # Reactives for findind entities (ship types, ships & locations)
     findShipTypes <- shiny::reactive({
         shipTypes <- shipTypeFacade$find() %>%
@@ -40,7 +40,7 @@ shinyServer(function(input, output) {
     dropDownServer("ship_id", "Vessel", findShips)
     
     # Map for rendering courses
-    output$coursesMap <- leaflet::renderLeaflet({
+    output$map <- leaflet::renderLeaflet({
         leaflet::leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
             leaflet::addTiles(map = ., urlTemplate = config$basemap$url, 
                               attribution = config$basemap$attribution) %>%
@@ -79,13 +79,13 @@ shinyServer(function(input, output) {
             time_traveled <- difftime(timestamps[2], timestamps[1], units = "secs")
             
             # Render map
-            leaflet::leafletProxy("coursesMap") %>%
+            leaflet::leafletProxy("map", data = trip) %>%
                 # Clear all polygons/pop-ups
                 leaflet::clearPopups(map = .) %>%
                 leaflet::clearShapes(map = .) %>%
                 leaflet::clearMarkers(map = .) %>%
                 # Draw path
-                leaflet::addPolygons(map = ., data = trip) %>%
+                leaflet::addPolygons(map = .) %>%
                 # Add popup for showing stretch information
                 leaflet::addPopups(lng = st_coordinates(trip.centroid)[,1],
                                    lat = st_coordinates(trip.centroid)[,2], 

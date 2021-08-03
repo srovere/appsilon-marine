@@ -28,9 +28,9 @@ shinyServer(function(input, output) {
             return(choices)
         }
     })
-    findLocations <- shiny::reactive({
+    findLongestStretch <- shiny::reactive({
         if (! is.null(input$ship_id) && (input$ship_id != "")) {
-            return(locationFacade$find(ship_id = input$ship_id))
+            return(locationFacade$findLongestStretch(ship_id = input$ship_id))
         }
         return(NULL)
     })
@@ -49,31 +49,26 @@ shinyServer(function(input, output) {
                              lat = config$basemap$center$latitude)
     })
     observe({
-        locations <- findLocations()
-        if (! is.null(locations) && (nrow(locations) > 1)) {
-            # Find longest distance between 2 observations
-            longest_distance <- locations %>%
-                dplyr::arrange(dplyr::desc(distance), dplyr::desc(datetime)) %>%
-                dplyr::slice_max(1)
-            
+        # Find longest stretch
+        longest_stretch <- findLongestStretch()
+        if (! is.null(longest_stretch) && (nrow(longest_stretch) == 1)) {
             # Get previous location
-            previous_location <- locations %>%
-                dplyr::filter(ship_id == input$ship_id & observation == longest_distance$observation - 1)
+            previous_location <- locationFacade$findPreviousLocation(longest_stretch)
             
             # Create a line that represents the trip between observations
             trip <- sf::st_linestring(
-                matrix(c(longest_distance$previous_longitude, longest_distance$previous_latitude,
-                         longest_distance$longitude, longest_distance$latitude), nrow = 2, ncol = 2, byrow = TRUE)
+                matrix(c(longest_stretch$previous_longitude, longest_stretch$previous_latitude,
+                         longest_stretch$longitude, longest_stretch$latitude), nrow = 2, ncol = 2, byrow = TRUE)
             )
             trip.extent   <- sf::st_bbox(trip)
             trip.centroid <- sf::st_centroid(trip)
             
             # Create point markers for source and destination
-            timestamps <- as.POSIXct(c(previous_location$datetime, longest_distance$datetime), origin="1970-01-01", tz="UTC")
+            timestamps <- as.POSIXct(c(previous_location$datetime, longest_stretch$datetime), origin="1970-01-01", tz="UTC")
             markers <- tibble::tibble(
                 is_destination = c(FALSE, TRUE),
-                longitud = c(longest_distance$previous_longitude, longest_distance$longitude),
-                latitud = c(longest_distance$previous_latitude, longest_distance$latitude),
+                longitud = c(longest_stretch$previous_longitude, longest_stretch$longitude),
+                latitud = c(longest_stretch$previous_latitude, longest_stretch$latitude),
                 datetime = timestamps
             ) %>%
                 dplyr::mutate(label = sprintf("<b>%s</b><br>%s UTC", dplyr::if_else(is_destination, "Arrival", "Departure"),
@@ -89,12 +84,12 @@ shinyServer(function(input, output) {
                 leaflet::clearPopups(map = .) %>%
                 leaflet::clearShapes(map = .) %>%
                 leaflet::clearMarkers(map = .) %>%
-                # Add line
+                # Draw path
                 leaflet::addPolygons(map = ., data = trip) %>%
-                # Add label
+                # Add popup for showing stretch information
                 leaflet::addPopups(lng = st_coordinates(trip.centroid)[,1],
                                    lat = st_coordinates(trip.centroid)[,2], 
-                                   data = longest_distance,
+                                   data = longest_stretch,
                                    options = popupOptions(closeButton = FALSE),
                                    popup = ~sprintf("Heading towards <b>%s</b><br/>Course: %dº | Speed: %d kts<br/>Distance traveled: %.2f m<br>Time traveled: %s", 
                                                     destination, course, speed, distance, lubridate::seconds_to_period(time_traveled))) %>%

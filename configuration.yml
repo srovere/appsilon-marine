@@ -3,9 +3,9 @@ data_source:
   type: 'CSV'
   parameters:
     tables:
-      ship_types: '../../data/ship_types.csv'
-      ships: '../../data/ships.csv'
-      locations: '../../data/locations.csv'
+      ship_types: 'data/ship_types.csv'
+      ships: 'data/ships.csv'
+      locations: 'data/locations.csv'
       
 # Map configuration
 basemap:

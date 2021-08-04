@@ -22,10 +22,11 @@ shinyServer(function(input, output, session) {
     findShips <- shiny::reactive({
         if (! is.null(input$ship_type_id) && (input$ship_type_id != "")) {
             ships <- shipFacade$find(ship_type_id = input$ship_type_id) %>%
-                dplyr::arrange(name)
+                dplyr::mutate(full_name = sprintf("%s (%s)", name, flag)) %>%
+                dplyr::arrange(full_name)
 
             choices        <- dplyr::pull(ships, ship_id)
-            names(choices) <- dplyr::pull(ships, name)
+            names(choices) <- dplyr::pull(ships, full_name)
             return(choices)
         }
     })
@@ -58,7 +59,7 @@ shinyServer(function(input, output, session) {
             
             # Create a line that represents the trip between observations
             trip <- sf::st_linestring(
-                matrix(c(longest_stretch$previous_longitude, longest_stretch$previous_latitude,
+                matrix(c(previous_location$longitude, previous_location$latitude,
                          longest_stretch$longitude, longest_stretch$latitude), nrow = 2, ncol = 2, byrow = TRUE)
             )
             trip.extent   <- sf::st_bbox(trip)
@@ -68,8 +69,8 @@ shinyServer(function(input, output, session) {
             timestamps <- as.POSIXct(c(previous_location$datetime, longest_stretch$datetime), origin="1970-01-01", tz="UTC")
             markers <- tibble::tibble(
                 is_destination = c(FALSE, TRUE),
-                longitud = c(longest_stretch$previous_longitude, longest_stretch$longitude),
-                latitud = c(longest_stretch$previous_latitude, longest_stretch$latitude),
+                longitud = c(previous_location$longitude, longest_stretch$longitude),
+                latitud = c(previous_location$latitude, longest_stretch$latitude),
                 datetime = timestamps
             ) %>%
                 dplyr::mutate(label = sprintf("<b>%s</b><br>%s UTC", dplyr::if_else(is_destination, "Arrival", "Departure"),
@@ -79,21 +80,24 @@ shinyServer(function(input, output, session) {
             # Calculate time traveled
             time_traveled <- difftime(timestamps[2], timestamps[1], units = "secs")
             
+            # Define text for legend
+            legend <- htmltools::HTML(
+                sprintf("Heading towards <b>%s</b><br/>Course: %dº | Speed: %d kts<br/>Distance travelled: %.2f m<br>Time travelled: %s",
+                        longest_stretch$destination, longest_stretch$course, longest_stretch$speed, longest_stretch$distance, 
+                        lubridate::seconds_to_period(time_traveled))
+            )
+            
             # Render map
             leaflet::leafletProxy("map", data = trip) %>%
                 # Clear all polygons/pop-ups
                 leaflet::clearPopups(map = .) %>%
                 leaflet::clearShapes(map = .) %>%
                 leaflet::clearMarkers(map = .) %>%
+                leaflet::clearControls(map = .) %>%
                 # Draw path
                 leaflet::addPolygons(map = .) %>%
-                # Add popup for showing stretch information
-                leaflet::addPopups(lng = st_coordinates(trip.centroid)[,1],
-                                   lat = st_coordinates(trip.centroid)[,2], 
-                                   data = longest_stretch,
-                                   options = popupOptions(closeButton = FALSE),
-                                   popup = ~sprintf("Heading towards <b>%s</b><br/>Course: %dº | Speed: %d kts<br/>Distance traveled: %.2f m<br>Time traveled: %s", 
-                                                    destination, course, speed, distance, lubridate::seconds_to_period(time_traveled))) %>%
+                # Add legend for showing stretch information
+                leaflet::addControl(map = ., position = 'topright', html = legend) %>%
                 # Add source/destination markers
                 leaflet::addCircleMarkers(map = ., data = markers,
                                           label = ~purrr::map(.x = label, .f = htmltools::HTML),
@@ -108,7 +112,8 @@ shinyServer(function(input, output, session) {
             leaflet::leafletProxy("map") %>%
                 leaflet::clearPopups(map = .) %>%
                 leaflet::clearShapes(map = .) %>%
-                leaflet::clearMarkers(map = .)
+                leaflet::clearMarkers(map = .) %>%
+                leaflet::clearControls(map = .)
         }
     })
 })

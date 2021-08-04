@@ -108,8 +108,6 @@ test_that("Location data (names and types)", {
     heading = 'integer',
     destination = 'character',
     parked = 'integer',
-    previous_longitude = 'numeric',
-    previous_latitude = 'numeric',
     observation = 'integer',
     distance = 'numeric'
   )

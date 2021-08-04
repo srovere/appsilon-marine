@@ -47,7 +47,7 @@ testthat::teardown({
 
 # Tests
 # This test performs a selection of one ship type and then one ship.
-# Then the longest stretch is verified for that ship. This could be done for
+# Then, the longest stretch is verified for that ship. This could be done for
 # all the ships, but it will take a lot of time. So I provide this short test
 # in order to exemplify.
 testServer(expr = {

@@ -91,7 +91,8 @@ distances <- dplyr::bind_cols(
 # Store distances. The first observation of each ship has distance = NA
 locations <- locations %>%
   dplyr::inner_join(distances, by = c("location_id")) %>%
-  dplyr::mutate(distance = dplyr::if_else(observation > 1, distance, as.numeric(NA)))
+  dplyr::mutate(distance = dplyr::if_else(observation > 1, distance, as.numeric(NA))) %>%
+  dplyr::select(-previous_latitude, -previous_longitude)
 
 # Save output CSV files
 readr::write_tsv(x = ship_types, file = "data/ship_types.csv")

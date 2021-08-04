@@ -2,6 +2,7 @@
 # Server logic for Shiny App
 #
 
+require(highcharter)
 require(htmltools)
 require(shiny)
 require(shinybusy)
@@ -62,8 +63,7 @@ shinyServer(function(input, output, session) {
                 matrix(c(previous_location$longitude, previous_location$latitude,
                          longest_stretch$longitude, longest_stretch$latitude), nrow = 2, ncol = 2, byrow = TRUE)
             )
-            trip.extent   <- sf::st_bbox(trip)
-            trip.centroid <- sf::st_centroid(trip)
+            trip.extent <- sf::st_bbox(trip)
             
             # Create point markers for source and destination
             timestamps <- as.POSIXct(c(previous_location$datetime, longest_stretch$datetime), origin="1970-01-01", tz="UTC")
@@ -77,27 +77,13 @@ shinyServer(function(input, output, session) {
                                               format(datetime, "%Y-%m-%d %H:%m:%S"))) %>%
                 sf::st_as_sf(x = ., coords = c("longitud", "latitud"))
             
-            # Calculate time traveled
-            time_traveled <- difftime(timestamps[2], timestamps[1], units = "secs")
-            
-            # Define text for legend
-            legend <- htmltools::HTML(
-                sprintf("Heading towards <b>%s</b><br/>Course: %dº | Speed: %d kts<br/>Distance travelled: %.2f m<br>Time travelled: %s",
-                        longest_stretch$destination, longest_stretch$course, longest_stretch$speed, longest_stretch$distance, 
-                        lubridate::seconds_to_period(time_traveled))
-            )
-            
             # Render map
             leaflet::leafletProxy("map", data = trip) %>%
                 # Clear all polygons/pop-ups
-                leaflet::clearPopups(map = .) %>%
                 leaflet::clearShapes(map = .) %>%
                 leaflet::clearMarkers(map = .) %>%
-                leaflet::clearControls(map = .) %>%
                 # Draw path
                 leaflet::addPolygons(map = .) %>%
-                # Add legend for showing stretch information
-                leaflet::addControl(map = ., position = 'topright', html = legend) %>%
                 # Add source/destination markers
                 leaflet::addCircleMarkers(map = ., data = markers,
                                           label = ~purrr::map(.x = label, .f = htmltools::HTML),
@@ -114,6 +100,78 @@ shinyServer(function(input, output, session) {
                 leaflet::clearShapes(map = .) %>%
                 leaflet::clearMarkers(map = .) %>%
                 leaflet::clearControls(map = .)
+        }
+    })
+    
+    # Speed gauge
+    output$speedGauge <- highcharter::renderHighchart({
+        # Find longest stretch
+        longest_stretch <- findLongestStretch()   
+        if (! is.null(longest_stretch) && (nrow(longest_stretch) == 1)) {
+            # Get colors for gauge
+            colors <- RColorBrewer::brewer.pal(n = length(config$gauge$breaks) - 1, 
+                                               name = config$gauge$palette)
+            if (config$gauge$inverted) {
+                colors <- rev(colors)
+            }
+            
+            # Defin plot bands
+            plotBands <- purrr::pmap(
+                .l = data.frame(from = head(config$gauge$breaks, n = length(config$gauge$breaks)-1),
+                                to = tail(config$gauge$breaks, n = length(config$gauge$breaks)-1),
+                                color = colors),
+                .f = function(from, to, color) {
+                    list(from = from, to = to, color = color, thickness = 30)
+                }
+            )
+            
+            # Draw gauge
+            gauge <- highcharter::highchart() %>%
+                highcharter::hc_chart(type = "solidgauge", backgroundColor = '#ffffff', height = 250,
+                                      style = list(fontFamily = "Roboto", backgroundColor = "#f8f8f8"),
+                                      spacingTop = 30, spacingBottom = 0, spacingLeft = 0, spacingRight = 0) %>%
+                highcharter::hc_pane(startAngle = -90, endAngle = 90, size = '100%', background = list(
+                    backgroundColor = '#b0b0b0', innerRadius = '60%', outerRadius = '100%',
+                    shape = 'arc', center = c('50%', '0%'))) %>%
+                highcharter::hc_yAxis(
+                    min = min(config$gauge$breaks), max = max(config$gauge$breaks), plotBands = plotBands,
+                    labels = list(y = 12), minorTickInterval = NULL, tickWidth = 0, tickPositions = list()
+                ) %>%
+                highcharter::hc_title(text = "Ship speed") %>%
+                highcharter::hc_add_series(type = 'gauge', data = longest_stretch$speed, color = 'rgba(0, 0, 0, 0)',
+                                           dataLabels = list(useHTML = TRUE, enabled = TRUE,
+                                                             style = list(fontSize = "16px"),
+                                                             borderWidth = 0, format = "{point.y} kts")) %>%
+                highcharter::hc_legend(enabled = FALSE) %>%
+                highcharter::hc_tooltip(enabled = FALSE)
+            return (gauge)
+        }
+    })
+    
+    # Notes
+    output$stretchInfo <- shiny::renderText({
+        # Find longest stretch
+        longest_stretch <- findLongestStretch()   
+        if (! is.null(longest_stretch) && (nrow(longest_stretch) == 1)) {
+            # Get previous location
+            previous_location <- locationFacade$findPreviousLocation(longest_stretch)
+            
+            # Get ship data and type
+            ship <- shipFacade$find(ship_id = longest_stretch$ship_id)
+            ship_type <- shipTypeFacade$find(ship_type_id = ship$ship_type_id)
+            
+            # Calculate time traveled
+            timestamps    <- as.POSIXct(c(previous_location$datetime, longest_stretch$datetime), origin="1970-01-01", tz="UTC")
+            time_traveled <- difftime(timestamps[2], timestamps[1], units = "secs")
+            
+            # Define text for legend
+            legend <- 
+                sprintf("<b>%s (%s) [%s]</b><br><br>Heading towards <b>%s</b><br/>Course: <b>%dº</b> | Speed: <b>%d kts</b><br/>Distance travelled: <b>%.2f m</b><br>Time travelled: <b>%s</b>",
+                        ship$name, ship$flag, ship_type$name,
+                        longest_stretch$destination, longest_stretch$course, longest_stretch$speed, longest_stretch$distance, 
+                        lubridate::seconds_to_period(time_traveled))
+            
+            return(legend)
         }
     })
 })

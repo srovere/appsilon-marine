@@ -57,7 +57,7 @@ After having normalized the original dataset, the resulting entities where store
 
 # 4. UI and Server development
 
-This Shiny application was developed using [shiny.semantics] (https://github.com/Appsilon/shiny.semantic) package. The application is divided in three files (global.R, ui.R and server.R). The user interface has three componets: 2 dropdowns to allow the selecction of a *vessel type* and a *vessel* (considering the type selected beforehand). When a vessel (ship) is selected, the map at the bottom of the page is redrawn. The longest stretch sailed by the selected ship is shown along with other useful information. A few styles were modified using the CSS file located at *www/css/styles.css*.
+This Shiny application was developed using [shiny.semantics] (https://github.com/Appsilon/shiny.semantic) package. The application is divided in three files (global.R, ui.R and server.R). The user interface has 5 components. User input consists of 2 dropdowns to allow the selecction of a *vessel type* and a *vessel* (considering the type selected beforehand). When a vessel (ship) is selected, the center map is redrawn. The longest stretch sailed by the selected ship is shown along with other useful information. At the bottom of the page, 2 widgets are displayed with information related to the longest stretch. A few styles were modified using the CSS file located at *www/css/styles.css*.
 
 # 5. Testing
 

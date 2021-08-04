@@ -2,6 +2,7 @@
 # User interface for Shiny App
 #
 
+require(highcharter)
 require(leaflet)
 require(shiny)
 require(shinybusy)
@@ -13,7 +14,7 @@ shinyUI(
         theme = "superhero", title = "Appsilon Test",
         
         # Load CSS
-        tags$link(rel = "stylesheet", type = "text/css", href = "css/styles.css?v=2"),
+        tags$link(rel = "stylesheet", type = "text/css", href = "css/styles.css?v=3"),
         
         # Use busy spinner
         add_busy_spinner(spin = "fading-circle", color = "#214a4f"),
@@ -31,7 +32,14 @@ shinyUI(
         # Separator
         br(),
             
-        # Main content,
-        leaflet::leafletOutput(outputId = "map", height = "70%")
+        # Map
+        leaflet::leafletOutput(outputId = "map", height = "45%"),
+        
+        # Statistics/Notes
+        cards(
+            class = "two",
+            card(highcharter::highchartOutput("speedGauge", height = 200)),
+            card(shiny::uiOutput("stretchInfo", height = 200))
+        )
     )
 )

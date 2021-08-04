@@ -137,11 +137,10 @@ shinyServer(function(input, output, session) {
                     min = min(config$gauge$breaks), max = max(config$gauge$breaks), plotBands = plotBands,
                     labels = list(y = 12), minorTickInterval = NULL, tickWidth = 0, tickPositions = list()
                 ) %>%
-                highcharter::hc_title(text = "Ship speed") %>%
+                highcharter::hc_title(text = sprintf("Ship speed: %d kts", longest_stretch$speed),
+                                      style = list(fontSize = "16px", fontWeight = "bold", color = "#006db2")) %>%
                 highcharter::hc_add_series(type = 'gauge', data = longest_stretch$speed, color = 'rgba(0, 0, 0, 0)',
-                                           dataLabels = list(useHTML = TRUE, enabled = TRUE,
-                                                             style = list(fontSize = "16px"),
-                                                             borderWidth = 0, format = "{point.y} kts")) %>%
+                                           dataLabels = list(enabled = FALSE)) %>%
                 highcharter::hc_legend(enabled = FALSE) %>%
                 highcharter::hc_tooltip(enabled = FALSE)
             return (gauge)

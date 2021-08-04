@@ -3,7 +3,11 @@ body, h1, h2, h3, h4, h5,h6, p, div, div.header {
 }
 
 .card div.content {
-  background-color: #78866b !important;
+  background-color: #006db2 !important;
+}
+
+.card div.content .header {
+  color: white !important;
 }
 
 .header {
@@ -29,6 +33,7 @@ body {
 
 #stretchInfo {
   font-size: 16px !important;
-  color: #1f7f7f !important;
+  color: #006db2 !important;
   padding: 20px;
+  padding-top: 30px;
 }

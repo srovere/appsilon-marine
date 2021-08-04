@@ -14,7 +14,7 @@ shinyUI(
         theme = "superhero", title = "Appsilon Test",
         
         # Load CSS
-        tags$link(rel = "stylesheet", type = "text/css", href = "css/styles.css?v=3"),
+        tags$link(rel = "stylesheet", type = "text/css", href = "css/styles.css?v=4"),
         
         # Use busy spinner
         add_busy_spinner(spin = "fading-circle", color = "#214a4f"),

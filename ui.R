@@ -20,7 +20,7 @@ shinyUI(
         add_busy_spinner(spin = "fading-circle", color = "#214a4f"),
         
         # Show header
-        header(title = "Shiny application proof of concept", description = ""),
+        header(title = "Proof of concept", description = ""),
         
         # User input        
         cards(

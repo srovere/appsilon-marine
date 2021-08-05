@@ -4,6 +4,7 @@
 
 require(highcharter)
 require(htmltools)
+require(leaflet)
 require(shiny)
 require(shinybusy)
 require(shiny.semantic)

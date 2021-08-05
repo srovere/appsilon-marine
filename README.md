@@ -37,9 +37,9 @@ This dataset is not normalized as it includes redundant and duplicated informati
 
 * **location** = (*location_id*, ship_id, datetime, latitude, longitude, speed, course, heading, destination, parked, observation, distance)
 
-During this normalization process, the distance between two given observations was calculated. So, if O1 and O2 are two consecutive observations for any given ship, <em>O2.distance</em> represents the distance travelled by that ship between O1 and O2. Although distance can be derived from latitude/longitude and computed on the fly, it is better to have this information pre-calculated to improve the overall performance of the Shiny application.
+During this normalization process, the distance between two given observations was calculated. So, if O1 and O2 are two consecutive observations for any given ship, <em>O2.distance</em> represents the distance travelled by that ship between O1 and O2. Although distance can be derived from latitude/longitude and computed on the fly, it is better to have this information pre-calculated to improve the overall performance of the application.
 
-The resulting files are stored in <em>data</em> directory. These files are not versioned (because the are too large), but they can be downloaded from https://1drv.ms/u/s!As8wkljo8CRlgpBdoR-2ryFVaXIODg?e=l1EI26.
+The resulting files are stored in <em>data</em> directory. These files are not versioned (because they are too large), but they can be downloaded from https://1drv.ms/u/s!As8wkljo8CRlgpBdoR-2ryFVaXIODg?e=l1EI26.
 
 # 3. Data accesing
 
@@ -48,7 +48,7 @@ After having normalized the original dataset, the resulting entities where store
 
 | Class | Description |
 | ------|:-----------:|
-| DataSource | Singleton abstract class that represents a data source (CSV, MySQL, PostgreSQL, etc). |
+| DataSource | Abstract class that represents a data source (CSV, MySQL, PostgreSQL, etc). |
 | CSVDataSource | At the moment, the only data source available. This data source is capable of holding in-memory tables read from CSV files. |
 | Facade | This abstract class holds an instance of a data source and provides access to a given entity. It also implements a generic finder method that can be used by descendant classes. |
 | ShipTypeFacade | This facade provides access to *ship_types* entity. |
@@ -57,12 +57,12 @@ After having normalized the original dataset, the resulting entities where store
 
 # 4. UI and Server development
 
-This Shiny application was developed using [shiny.semantics] (https://github.com/Appsilon/shiny.semantic) package. The application is divided in three files (global.R, ui.R and server.R). The user interface has 5 components. User input consists of 2 dropdowns to allow the selecction of a *vessel type* and a *vessel* (considering the type selected beforehand). When a vessel (ship) is selected, the center map is redrawn. The longest stretch sailed by the selected ship is shown along with other useful information. At the bottom of the page, 2 widgets are displayed with information related to the longest stretch. A few styles were modified using the CSS file located at *www/css/styles.css*.
+This Shiny application was developed using [shiny.semantics](https://github.com/Appsilon/shiny.semantic) package. The application is divided into three files (global.R, ui.R and server.R). The user interface has 5 components. User input consists of 2 dropdowns to allow the selecction of a *vessel type* and a *vessel* (considering the type selected beforehand). When a vessel (ship) is selected, the center map is redrawn. The longest stretch sailed by the selected ship is shown along with other useful information. At the bottom of the page, 2 widgets are displayed with information related to the longest stretch. A few styles were modified using the CSS file located at *www/css/styles.css*.
 
 # 5. Testing
 
-To ensure the application correct operation, a few unit tests were implemented. These tests can be found in *tests* directory and may be run using *run_tests.r* script located in the root directory. The units tests implemented include:
+To ensure correct operation, a few unit tests were implemented. These tests can be found in *tests* folder and may be run using *run_tests.r* script (located at root directory). The units tests implemented include:
 
-* *tests/testthat/test_data.r*: Tests for checking attributes' names and types.
-* *tests/testthat/test_finders.r*: Tests for checking data finders *using facades.
-* *tests/test_shiny.r*: Reactivity tests using Shiny application.
+* *tests/testthat/test_data.r*: Tests for checking attributes names and types.
+* *tests/testthat/test_finders.r*: Tests for checking data finders (using facades).
+* *tests/test_shiny.r*: Reactivity tests for Shiny application.
